@@ -1,0 +1,47 @@
+#!/usr/bin/env sh
+# Blocks commits containing secrets, using gitleaks against staged changes.
+# Activated per-checkout via: git config core.hooksPath .githooks
+# (This must be run once per machine/checkout -- it is not inherited from
+# a fresh clone or from another checkout of the same repo on a different
+# machine.)
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks not found on PATH." >&2
+  echo "  Windows: winget install --id Gitleaks.Gitleaks -e" >&2
+  echo "  macOS:   brew install gitleaks" >&2
+  exit 1
+fi
+
+# Reject staged text-like files encoded as UTF-16/UTF-32 -- gitleaks' rules
+# are regex over byte content and assume UTF-8, so a file with a NUL byte
+# after every character (e.g. PowerShell's `ConvertTo-Json | Out-File`
+# without `-Encoding utf8`, which defaults to UTF-16LE) is invisible to it.
+# This is not hypothetical: Home Server's apps/sparky-fitness/sparky_fitness.json
+# was committed with live secrets in UTF-16 on 2026-03-29 and went undetected
+# by gitleaks until 2026-09-28 specifically because of this.
+BINARY_EXT_RE='\.(png|jpe?g|gif|ico|bmp|webp|avif|pdf|zip|gz|7z|tar|rar|ttf|otf|woff2?|eot|mp3|mp4|mov|avi|webm|db|sqlite3?|p12|pfx|keystore|jar|exe|dll|so|dylib|icns|heic|psd|stl|3mf|obj|log)$'
+bad=""
+for f in $(git diff --cached --name-only --diff-filter=ACM); do
+  [ -f "$f" ] || continue
+  echo "$f" | grep -qiE "$BINARY_EXT_RE" && continue
+  bom=$(head -c 2 -- "$f" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+  if [ "$bom" = "fffe" ] || [ "$bom" = "feff" ]; then
+    bad="$bad
+  $f (UTF-16 byte-order mark)"
+    continue
+  fi
+  if head -c 8192 -- "$f" 2>/dev/null | od -An -tu1 | tr -s ' ' '\n' | grep -qx '0'; then
+    bad="$bad
+  $f (embedded NUL byte -- likely UTF-16/UTF-32)"
+  fi
+done
+if [ -n "$bad" ]; then
+  echo "pre-commit: blocked -- non-UTF-8 text file(s) staged (gitleaks cannot scan these for secrets):" >&2
+  echo "$bad" >&2
+  echo "" >&2
+  echo "Re-save as UTF-8 (e.g. PowerShell: ... | Out-File -Encoding utf8) and re-stage." >&2
+  echo "If a file is genuinely binary and belongs in the repo, add its extension to BINARY_EXT_RE in this hook." >&2
+  exit 1
+fi
+
+gitleaks git --staged --redact -v

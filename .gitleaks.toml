@@ -1,0 +1,13 @@
+title = "gitleaks config"
+
+[extend]
+useDefault = true
+
+# Add confirmed non-secret false positives below as they're discovered
+# (e.g. a device ID or checksum that happens to match an entropy rule).
+# Add a specific regex or path -- never disable a rule wholesale.
+#
+# [allowlist]
+# description = "Repo-specific false positives"
+# regexes = ["pattern-that-matched"]
+# paths = ["path/to/file"]

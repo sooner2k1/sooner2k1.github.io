@@ -1,0 +1,4 @@
+# Store text files as LF in the repo and check them out as LF on every machine (Windows PC, Mac mini,
+# MacBook, CI), so the same file is never seen as modified just because of CRLF vs LF. Binary files are
+# detected automatically. See docs/AGENT_WORKSPACE_PROTOCOL.md (Line endings) in the workspace root repo.
+* text=auto eol=lf
