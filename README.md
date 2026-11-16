@@ -1,8 +1,13 @@
 # AppSite
 
-Public support and privacy pages for the Sooner Family iPhone apps, served by GitHub Pages at
-https://sooner2k1.github.io/ (repo `sooner2k1/sooner2k1.github.io`, branch `main`, root).
+Retired 2026-11-15. The app support and privacy pages moved to **https://sfnlab.com/** (source:
+Home Server repo `sfnlab-site-stack/site/`, support email `dev@sfnlab.com`).
 
-- `/claimcaddy/privacy/` and `/claimcaddy/support/` are the URLs ClaimCaddy and App Store Connect use.
-- Support email `support@soonerfamilynetwork.com` is a Mailu alias on the home server.
-- Everything here is public. Never put secrets or personal details in this repo.
+This GitHub Pages site (https://sooner2k1.github.io/, repo `sooner2k1/sooner2k1.github.io`) only keeps
+redirects so that older ClaimCaddy builds and links still land on the right page:
+
+- `/claimcaddy/support/` -> https://sfnlab.com/claimcaddy/
+- `/claimcaddy/privacy/` -> https://sfnlab.com/claimcaddy/privacy/
+- `/` -> https://sfnlab.com/
+
+Keep the redirects; don't add new pages here. Everything here is public.
